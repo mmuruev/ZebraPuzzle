@@ -2,11 +2,11 @@ package zebrapuzzle;
 
 import zebrapuzzle.inputfile.CInputFileParser;
 import zebrapuzzle.inputfile.IInputFileParser;
+import zebrapuzzle.resolve.CResolver;
+import zebrapuzzle.resolve.rules.CRule;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,10 +35,15 @@ public class CStart {
         }
         IInputFileParser parser = new CInputFileParser(inputFileName);
         parser.parse();
-        ArrayList<Map<String, Map<String, String>>> rules = parser.getColumnPieces();
+        List<CRule> rules = parser.getRules();
         int iNumberOfHouses = parser.getNumberOfHouses();
-        System.out.println(iNumberOfHouses);
 
+        CResolver resolver = new CResolver(iNumberOfHouses);
+        resolver.setTablePropertyNames(parser.getFieldNames());
+        resolver.setSource(rules);
+        boolean result = resolver.find();
+        ArrayList<Map<String, String>> table = resolver.getTableResult();
+        System.out.println(iNumberOfHouses);
     }
 
 }

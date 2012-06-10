@@ -1,7 +1,10 @@
 package zebrapuzzle.inputfile;
 
-import java.util.ArrayList;
+import zebrapuzzle.resolve.rules.CRule;
+
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,6 +13,11 @@ import java.util.Map;
  * Time: 16:29
  */
 public interface IInputFileParser {
+    /**
+     * N/A value for rule
+     */
+    public final int NA = -1;
+
     /**
      * Begin parsing process
      */
@@ -23,11 +31,16 @@ public interface IInputFileParser {
     public void setFileName(String sFileName);
 
     /**
+     * Set all field names.
+     */
+    public Set<String> getFieldNames();
+
+    /**
      * Return parse result
      *
      * @return
      */
-    public ArrayList<Map<String, Map<String, String>>> getColumnPieces();
+    public List<CRule> getRules();
 
     /**
      * Get number houses in the task

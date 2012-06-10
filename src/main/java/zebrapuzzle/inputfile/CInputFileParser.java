@@ -1,12 +1,14 @@
 package zebrapuzzle.inputfile;
 
+import zebrapuzzle.resolve.rules.CRule;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static zebrapuzzle.inputfile.constant.CCommandConstant.*;
 
 /**
  * Class that implement file parser  for puzzle rules
@@ -19,6 +21,9 @@ import java.util.Map;
  * Time: 12:42
  */
 public class CInputFileParser implements IInputFileParser {
+    private final int PROPERTY = 1;
+    private final int VALUE = 2;
+
     /**
      * File which will be parse
      */
@@ -27,17 +32,27 @@ public class CInputFileParser implements IInputFileParser {
     private int iNumberOfHouses;
 
     /**
-     * Contain all parsed column pieces
-     * Order in ArrayList equal order lines in file
-     * Map<Command<FieldName,Value>>
+     * Contain all rules from file
      */
-    private ArrayList<Map<String, Map<String, String>>> columnPieces;
+    private List<CRule> rules;
+    /**
+     * Set all field names
+     */
+    private Set<String> fieldNames;
+
+    /**
+     * Values  a[x][y]="Cat"
+     */
+    private List<Set<String>> values;
+
 
     /**
      * Default constructor
      */
     public CInputFileParser() {
-        columnPieces = new ArrayList<>();
+        fieldNames = new HashSet<>();
+        rules = new LinkedList<>();
+        values = new LinkedList<>();
     }
 
     /**
@@ -60,13 +75,26 @@ public class CInputFileParser implements IInputFileParser {
             iNumberOfHouses = Integer.parseInt(fileBuffer.readLine());// get the first line from file
             while ((sFileLine = fileBuffer.readLine()) != null) {
                 String[] asLineWorlds = sFileLine.split(";");
-                Map<String, Map<String, String>> rule = new HashMap<>(1);
-                Map<String, String> values = new HashMap<>((asLineWorlds.length - 1) / 2);
-                rule.put(asLineWorlds[0], values);
-                for (int index = 1; index < asLineWorlds.length; index = index + 2) {
-                    values.put(asLineWorlds[index], asLineWorlds[index + 1]);
+                CRule rule = new CRule();
+                switch (asLineWorlds[0]) {
+                    case SAME:
+                        rule.relation = CRule.Relation.SAME;
+                        break;
+                    case NEXT_TO:
+                        rule.relation = CRule.Relation.NEXT_TO;
+                        break;
+                    case TO_THE_LEFT_OF:
+                        rule.relation = CRule.Relation.TO_THE_LEFT_OF;
+                        break;
                 }
-                columnPieces.add(rule);
+                if (asLineWorlds.length > 2) {
+                    rule.sourceValue = getValueOrderNumber(asLineWorlds[VALUE], asLineWorlds[PROPERTY]);
+                }
+                if (asLineWorlds.length > 4) {
+                    rule.targetValue = getValueOrderNumber(asLineWorlds[VALUE], asLineWorlds[PROPERTY]);
+                }
+                rules.add(rule);
+                fieldNames.remove(POSITION_KEY); // remove position from set
             }
 
         } catch (FileNotFoundException e) {
@@ -79,8 +107,33 @@ public class CInputFileParser implements IInputFileParser {
             System.out.println("First line of the file not integer as expected");
             e.printStackTrace();
         }
+    }
 
+    private int getPropertiesOrderNumber(String property) {
+        int counter = 0;
+        fieldNames.add(property);
+        for (String fieldName : fieldNames) {
+            if (fieldName.equals(property)) {
+                return counter;
+            }
+            counter++;
+        }
+        return NA;
+    }
 
+    private int getValueOrderNumber(String value, String property) {
+        int indexOfProperty = getPropertiesOrderNumber(property);
+        if (indexOfProperty == NA) {
+            return NA;
+        }
+
+        Set<String> valueSet;
+        //  if ((valueSet = values.get(indexOfProperty)) == null) {
+        valueSet = new HashSet<>();
+        values.add(indexOfProperty, valueSet);
+        //  }
+        valueSet.add(value);
+        return indexOfProperty;
     }
 
     @Override
@@ -88,13 +141,21 @@ public class CInputFileParser implements IInputFileParser {
         this.sFileName = sFileName;
     }
 
+    /**
+     * Set all field names.
+     */
+    @Override
+    public Set<String> getFieldNames() {
+        return fieldNames;
+    }
+
+    @Override
     public int getNumberOfHouses() {
         return iNumberOfHouses;
     }
 
-    @Override
-    public ArrayList<Map<String, Map<String, String>>> getColumnPieces() {
-        return columnPieces;
+    public List<CRule> getRules() {
+        return rules;
     }
 
     /**
