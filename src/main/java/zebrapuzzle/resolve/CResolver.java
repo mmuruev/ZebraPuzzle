@@ -3,6 +3,7 @@ package zebrapuzzle.resolve;
 import zebrapuzzle.resolve.generator.CPermutator;
 import zebrapuzzle.resolve.rules.CRule;
 
+
 import static zebrapuzzle.inputfile.IInputFileParser.*;
 
 import java.util.*;
@@ -51,21 +52,46 @@ public class CResolver {
     }
 
     public boolean find() {
-        initArray(tableResult.size(), tableProperty.length); // todo wrong tableResult.size() as size value
+        initArray(iNumberOfHouses, tableProperty.length); // todo wrong tableResult.size() as size value
 
         // setTableValuesNames(rules);
+
         List<int[]> indexes = CPermutator.generate(tableProperty.length);
-        boolean result = true;
-        for (CRule rule : rules) {
-            result &= rulesEngine(rule, asPermTemp);
+        for (int repeat = 0; repeat < indexes.size(); repeat++) {
+            int[] indexesLine = indexes.get(repeat); // get line current line from collection
+            int row = 0;
+            for (int index : indexesLine) {   // use values current line as indexes for select another lines
+                asPermTemp[row++] = indexes.get(index);
+
+            }
+            if (rulesChecker(rules, asPermTemp)) {
+                return true;
+            }
+
         }
-        return result;
+        return false;
     }
 
-    public boolean rulesEngine(CRule rule, int asPermTemp[][]) {
+    /**
+     * Rules checker return true if all rules passed
+     *
+     * @param rules      rules collection
+     * @param asPermTemp matrix for checking
+     * @return boolean result
+     */
+
+    private boolean rulesChecker(List<CRule> rules, int asPermTemp[][]) {
+        for (CRule rule : rules) {
+            if (!rulesEngine(rule, asPermTemp)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean rulesEngine(CRule rule, int asPermTemp[][]) {
         boolean result = false;
         for (int position = 0; position < asPermTemp.length; position++) {
-
 
             switch (rule.relation) {
                 case SAME: // only equal positions
@@ -76,6 +102,7 @@ public class CResolver {
                         target = asPermTemp[position][rule.targetProperty] == rule.targetValue;
                     }
                     result = asPermTemp[position][rule.sourceProperty] == rule.sourceValue && target;
+                    if (result) System.out.println("SAME found");   // todo remove after debug
                     break;
                 }
 
@@ -89,6 +116,7 @@ public class CResolver {
                         target = asPermTemp[position - 1][rule.targetProperty] == rule.targetValue;
                     }
                     result = target && asPermTemp[position][rule.sourceProperty] == rule.sourceValue;
+                    if (result) System.out.println("NEXT_TO found");   // todo remove after debug
                     break;
                 }
                 case TO_THE_LEFT_OF: // -1
@@ -98,6 +126,7 @@ public class CResolver {
                         target = asPermTemp[position - 1][rule.targetProperty] == rule.targetValue;
                     }
                     result = target && asPermTemp[position][rule.sourceProperty] == rule.sourceValue;
+                    if (result) System.out.println("TO_THE_LEFT_OF found");   // todo remove after debug
                     break;
                 }
             }
@@ -106,7 +135,8 @@ public class CResolver {
     }
 
     private void initArray(int iPositions, int iKeyMax) {
-        asPermTemp = new int[iPositions][iKeyMax - 1]; // todo keyMax - position name because position now index
+        asPermTemp = new int[iPositions][iKeyMax]; // todo keyMax - position name because position now index
+
     }
 
     public ArrayList<Map<String, String>> getTableResult() {
