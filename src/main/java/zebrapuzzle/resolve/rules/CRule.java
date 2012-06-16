@@ -8,11 +8,11 @@ package zebrapuzzle.resolve.rules;
  */
 
 public class CRule {
-    public enum Relation {
-        SAME, TO_THE_LEFT_OF, NEXT_TO
+    public enum Type {
+        SAME, TO_THE_LEFT_OF, TO_THE_RIGHT_OF, NEXT_TO
     }
 
-    public Relation relation;
+    public Type type;
     public int sourceProperty;
     public int sourceValue;
     public int targetProperty;
