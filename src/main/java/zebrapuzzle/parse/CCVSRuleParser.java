@@ -39,29 +39,22 @@ public class CCVSRuleParser implements IRuleParser {
     /**
      * Contain all rules from stream
      */
-    private List<CRule> rules;
+    private List<CRule> rules = new LinkedList<>();
     /**
      * Contain all field names
      */
-    private List<String> properties;
+    private List<String> properties = new ArrayList<>();
 
     /**
      * Values  a[x][y]="Cat"
      */
-    private List<List<String>> values;
-
-    private CCVSRuleParser() {
-        rules = new LinkedList<>();
-        properties = new ArrayList<>();
-        values = new ArrayList<>();
-    }
+    private List<List<String>> values = new ArrayList<>();
 
 
     /**
      * Default constructor
      */
     public CCVSRuleParser(InputStream ruleStream) {
-        super();
         parse(ruleStream);
     }
 
