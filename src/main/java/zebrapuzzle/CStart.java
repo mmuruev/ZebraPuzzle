@@ -1,16 +1,13 @@
 package zebrapuzzle;
 
 import zebrapuzzle.parse.CCVSRuleParser;
-import zebrapuzzle.parse.IRuleParser;
 import zebrapuzzle.resolve.CResolver;
-import zebrapuzzle.resolve.rules.CRule;
+import zebrapuzzle.save.CXmlResultSaver;
 import zebrapuzzle.utils.CUtils;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Main Class program entry point
@@ -30,15 +27,7 @@ public class CStart {
     public static void main(final String[] args) throws IOException {
         String inputFileName = CUtils.getArg(args, 0, INPUT_FILE_DEFAULT_NAME);
         String outputFileName = CUtils.getArg(args, 1, OUTPUT_FILE_DEFAULT_NAME);
-        IRuleParser parser = new CCVSRuleParser(new FileInputStream(inputFileName));
-        List<CRule> rules = parser.getRules();
-        int iNumberOfHouses = parser.getNumberOfHouses();
-
-        CResolver resolver = new CResolver(iNumberOfHouses);
-        resolver.setTablePropertyNames(parser.getProperties());
-        resolver.setSource(rules);
-        boolean result = resolver.find();
-        ArrayList<Map<String, String>> table = resolver.getTableResult();
-        System.out.println(iNumberOfHouses);
+        CResolver resolver = new CResolver(new CCVSRuleParser(new FileInputStream(inputFileName)));
+        resolver.saveResult(new CXmlResultSaver(new FileOutputStream(outputFileName)));
     }
 }

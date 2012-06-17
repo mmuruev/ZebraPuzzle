@@ -23,16 +23,7 @@ import java.util.List;
  */
 public class CCVSRuleParser implements IRuleParser {
     private static final Charset ENCODING = Charset.forName("UTF-8");
-    private static final String POSITION = "position"; // name for position
-
-    /**
-     * Constants described meaning values in the file
-     */
-    private static final int RULE_TYPE = 0;
-    private static final int SOURCE_PROPERTY = 1;
-    private static final int SOURCE_VALUE = 2;
-    private static final int TARGET_PROPERTY = 3;
-    private static final int TARGET_VALUE = 4;
+    private static final String POSITION = "position";
 
     private int iNumberOfHouses;
 
@@ -98,14 +89,14 @@ public class CCVSRuleParser implements IRuleParser {
             while ((sFileLine = reader.readLine()) != null) {
                 String[] asLineWorlds = sFileLine.split(";");
                 CRule rule = new CRule();
-                rule.type = CRule.Type.valueOf(asLineWorlds[RULE_TYPE]);
-                if (asLineWorlds.length > SOURCE_VALUE) {
-                    rule.sourceProperty = getPropertiesOrderNumber(asLineWorlds[SOURCE_PROPERTY]);
-                    rule.sourceValue = getValueOrderNumber(asLineWorlds[SOURCE_VALUE], asLineWorlds[SOURCE_PROPERTY]);
+                rule.type = CRule.Type.valueOf(asLineWorlds[0]);
+                if (asLineWorlds.length >= 3) {
+                    rule.sourceProperty = getPropertiesOrderNumber(asLineWorlds[1]);
+                    rule.sourceValue = getValueOrderNumber(asLineWorlds[2], asLineWorlds[1]);
                 }
-                if (asLineWorlds.length > TARGET_VALUE) {
-                    rule.targetProperty = getPropertiesOrderNumber(asLineWorlds[TARGET_PROPERTY]);
-                    rule.targetValue = getValueOrderNumber(asLineWorlds[TARGET_VALUE], asLineWorlds[TARGET_PROPERTY]);
+                if (asLineWorlds.length >= 5) {
+                    rule.targetProperty = getPropertiesOrderNumber(asLineWorlds[3]);
+                    rule.targetValue = getValueOrderNumber(asLineWorlds[4], asLineWorlds[3]);
                     rules.add(rule);
                 }
             }

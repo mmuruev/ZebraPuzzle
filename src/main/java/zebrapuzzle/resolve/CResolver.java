@@ -1,11 +1,12 @@
 package zebrapuzzle.resolve;
 
+import zebrapuzzle.parse.IRuleParser;
 import zebrapuzzle.resolve.generator.CPermutator;
 import zebrapuzzle.resolve.rules.CRule;
+import zebrapuzzle.save.IResultSaver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static zebrapuzzle.parse.IRuleParser.POSITION_INDEX;
 
@@ -16,125 +17,107 @@ import static zebrapuzzle.parse.IRuleParser.POSITION_INDEX;
  * Time: 19:51
  */
 public class CResolver {
-    private static final String POSITION_KEY = "position";
-    private static final String SAME = "SAME";
-    private static final String TO_THE_LEFT_OF = "TO_THE_LEFT_OF";
-    private static final String NEXT_TO = "NEXT_TO";
-
-    private int iNumberOfHouses;
-
-    private ArrayList<Map<String, String>> tableResult;
-    /**
-     * Array represent the tableResult
-     * where asPermTemp[position][KeyIndex]
-     */
-    private int[][] asPermTemp;
-    /**
-     * Array contain property names
-     */
-    private String[] tableProperty;
-
-
     /**
      * Contain all parsed column pieces
      * Order in List equal order lines in file
      * Map<Command<FieldName,Value>>
      */
     private List<CRule> rules;
+    private List<int[]> result = new ArrayList<>();
+    private String[] properties;
+    private String[][] values;
+    private int numberOfHouses;
+    private List<int[]> permutations;
 
-    public CResolver() {
-        tableResult = new ArrayList<>();
+    public CResolver(IRuleParser parser) {
+        numberOfHouses = parser.getNumberOfHouses();
+        rules = parser.getRules();
+        properties = parser.getProperties();
+        values = parser.getValues();
+        permutations = CPermutator.generate(numberOfHouses);
+        find();
     }
 
-    public CResolver(int iNumberOfHouses) {
-        this.iNumberOfHouses = iNumberOfHouses;
-        tableResult = new ArrayList<>(iNumberOfHouses);
-
+    public void saveResult(IResultSaver saver) {
+        saver.save(properties, getResult());
+        saver.close();
     }
 
-    public boolean find() {
-        initArray(tableResult.size(), tableProperty.length); // todo wrong tableResult.size() as size value
+    private boolean find() {
+        for (int[] permutation : permutations) {
+            result.add(permutation);
+            if (!checkRules()) {
+                result.remove(result.size() - 1);
+                continue;
+            }
+            if (result.size() == properties.length || find()) {
+                return true;
+            }
+            result.remove(result.size() - 1);
+        }
+        return false;
+    }
 
-        // setTableValuesNames(rules);
-        List<int[]> indexes = CPermutator.generate(tableProperty.length);
-        boolean result = true;
+    private boolean checkRules() {
         for (CRule rule : rules) {
-            result &= rulesEngine(rule, asPermTemp);
-        }
-        return result;
-    }
+            if (rule.sourceProperty >= result.size() || rule.targetProperty >= result.size()) {
+                continue;
+            }
 
-    public boolean rulesEngine(CRule rule, int asPermTemp[][]) {
-        boolean result = false;
-        for (int position = 0; position < asPermTemp.length; position++) {
-
-
+            int sourcePosition = getPosition(rule.sourceProperty, rule.sourceValue);
+            int targetPosition = getPosition(rule.targetProperty, rule.targetValue);
             switch (rule.type) {
-                case SAME: // only equal positions
-                {
-                    boolean target = true;
-                    if (rule.targetProperty != POSITION_INDEX)  // for no pair
-                    {
-                        target = asPermTemp[position][rule.targetProperty] == rule.targetValue;
+                case SAME:
+                    if (sourcePosition != targetPosition) {
+                        return false;
                     }
-                    result = asPermTemp[position][rule.sourceProperty] == rule.sourceValue && target;
                     break;
-                }
-
-                case NEXT_TO: // -1/+1
-                {
-                    boolean target = false;
-                    if (position < (asPermTemp.length - 1)) {
-                        target = asPermTemp[position + 1][rule.targetProperty] == rule.targetValue;
+                case NEXT_TO:
+                    if (sourcePosition != targetPosition - 1 && sourcePosition != targetPosition + 1) {
+                        return false;
                     }
-                    if (!target && position > 0) {
-                        target = asPermTemp[position - 1][rule.targetProperty] == rule.targetValue;
-                    }
-                    result = target && asPermTemp[position][rule.sourceProperty] == rule.sourceValue;
                     break;
-                }
-                case TO_THE_LEFT_OF: // -1
-                {
-                    boolean target = false;
-                    if (position > 0) {
-                        target = asPermTemp[position - 1][rule.targetProperty] == rule.targetValue;
+                case TO_THE_LEFT_OF:
+                    if (sourcePosition != targetPosition - 1) {
+                        return false;
                     }
-                    result = target && asPermTemp[position][rule.sourceProperty] == rule.sourceValue;
                     break;
-                }
+                case TO_THE_RIGHT_OF:
+                    if (sourcePosition != targetPosition + 1) {
+                        return false;
+                    }
+                    break;
             }
         }
-        return result;
+        return true;
     }
 
-    private void initArray(int iPositions, int iKeyMax) {
-        asPermTemp = new int[iPositions][iKeyMax - 1]; // todo keyMax - position name because position now index
-    }
+    private int getPosition(int property, int value) {
+        if (property == POSITION_INDEX) {
+            return value;
+        }
 
-    public ArrayList<Map<String, String>> getTableResult() {
-        return tableResult;
-    }
-
-    public void setNumberOfHouses(int iNumberOfHouses) {
-        this.iNumberOfHouses = iNumberOfHouses;
-    }
-
-    public void setTablePropertyNames(String[] tableProperty) {
-        this.tableProperty = tableProperty;
-    }
-
-    private int getIndexByName(String sValue, String[] asSource) {
-        for (int position = 0; position < asSource.length; position++) {
-
-            if (tableProperty[position].equals(sValue)) {
-                return position;
+        int[] values = result.get(property);
+        for (int index = 0; index < values.length; index++) {
+            if (values[index] == value) {
+                return index;
             }
         }
-        return POSITION_INDEX;
+        return -2;
     }
 
+    private String[][] getResult() {
+        if (result == null || result.isEmpty()) {
+            return null;
+        }
 
-    public void setSource(List<CRule> rules) {
-        this.rules = rules;
+        String[][] houses = new String[numberOfHouses][];
+        for (int houseIndex = 0; houseIndex < numberOfHouses; houseIndex++) {
+            houses[houseIndex] = new String[result.size()];
+            for (int propertyIndex = 0; propertyIndex < result.size(); propertyIndex++) {
+                houses[houseIndex][propertyIndex] = values[propertyIndex][result.get(propertyIndex)[houseIndex]];
+            }
+        }
+        return houses;
     }
 }

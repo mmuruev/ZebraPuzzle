@@ -1,7 +1,6 @@
 package zebrapuzzle.resolve.generator;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -11,7 +10,6 @@ import java.util.List;
  * Time: 17:44
  */
 public class CPermutator {
-
     public static List<int[]> generate(int numberOfElements) {
         return generate(new ArrayList<int[]>(factorial(numberOfElements)),
                 createInitialPermutation(numberOfElements), numberOfElements);
@@ -51,6 +49,4 @@ public class CPermutator {
         permutation[index1] = permutation[index2];
         permutation[index2] = temp;
     }
-
-
 }
