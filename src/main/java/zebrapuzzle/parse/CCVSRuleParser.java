@@ -27,6 +27,7 @@ public class CCVSRuleParser implements IRuleParser {
 
     private int iNumberOfHouses;
 
+
     /**
      * Contain all rules from stream
      */

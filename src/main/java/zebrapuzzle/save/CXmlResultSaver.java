@@ -47,6 +47,7 @@ public class CXmlResultSaver implements IResultSaver {
     }
 
     private Document createDocument() {
+
         try {
             return DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         } catch (ParserConfigurationException e) {
